@@ -1,3 +1,4 @@
+import json
 import uuid
 from uuid import UUID
 
@@ -47,6 +48,33 @@ class DocumentService:
         if doc.owner_id != owner_id:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="only owner can share")
         await self.repo.share(document_id, user_id, role)
+        await self.session.commit()
+
+    async def apply_canvas_op(self, document_id: UUID, user_id: UUID, op: dict) -> None:
+        await self.get(document_id, user_id)
+        doc = await self.repo.lock_document(document_id)
+        try:
+            state = json.loads(doc.content) if doc.content and doc.content.startswith("{") else {}
+        except json.JSONDecodeError:
+            state = {}
+        if state.get("type") != "canvas":
+            state = {"type": "canvas", "shapes": {}}
+        shapes = state.get("shapes", {})
+        kind = op.get("kind")
+        if kind == "add":
+            s = op.get("shape", {})
+            shapes[s["id"]] = s
+        elif kind == "update":
+            sid = op.get("id")
+            if sid in shapes:
+                shapes[sid].update(op.get("changes", {}))
+        elif kind == "delete":
+            shapes.pop(op.get("id"), None)
+        elif kind == "full_sync":
+            shapes = op.get("shapes", {})
+        state["shapes"] = shapes
+        doc.content = json.dumps(state)
+        doc.current_revision += 1
         await self.session.commit()
 
     async def generate_share_link(self, document_id: UUID, user_id: UUID) -> str:

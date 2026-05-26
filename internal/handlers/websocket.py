@@ -66,6 +66,17 @@ async def document_socket(websocket: WebSocket, document_id: UUID, token: str = 
             elif event_type == "presence":
                 await manager.update_presence(conn, payload.get("presence", {}))
 
+            elif event_type == "canvas_op":
+                op = payload.get("op", {})
+                async with SessionLocal() as session:
+                    await DocumentService(session).apply_canvas_op(document_id, user_id, op)
+                await manager.broadcast_distributed(
+                    document_id,
+                    {"type": "canvas_op", "op": op, "user_id": str(user_id)},
+                    exclude_connection_id=conn.connection_id,
+                )
+                await manager.send(conn, {"type": "canvas_ack", "op_id": op.get("op_id")})
+
             elif event_type == "title_change":
                 new_title = payload.get("title", "").strip()
                 if new_title:

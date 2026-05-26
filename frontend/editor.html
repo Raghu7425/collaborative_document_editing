@@ -3,96 +3,183 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>CollabDocs — Editor</title>
+  <title>CollabDocs — Canvas</title>
   <link rel="stylesheet" href="/static/css/app.css"/>
 </head>
 <body>
-  <div class="editor-layout">
+<div class="canvas-editor">
 
-    <!-- Toolbar -->
-    <header class="editor-toolbar">
-      <div class="toolbar-left">
-        <button class="back-btn" id="back-btn" title="Back to documents">←</button>
+  <!-- ── Top Toolbar ── -->
+  <header class="editor-toolbar">
+    <div class="toolbar-left">
+      <button class="back-btn" id="back-btn" title="Back">←</button>
+    </div>
+    <div class="toolbar-center">
+      <input class="doc-title-input" id="doc-title" type="text" placeholder="Untitled" spellcheck="false" autocomplete="off"/>
+    </div>
+    <div class="toolbar-right">
+      <div class="users-bar" id="users-bar"></div>
+      <span class="save-status" id="save-status"></span>
+      <button class="share-btn" id="share-btn">🔗 Share</button>
+      <div class="status-indicator">
+        <span class="status-dot" id="status-dot"></span>
+        <span id="status-label" style="white-space:nowrap">Connecting…</span>
+      </div>
+      <button class="btn btn-ghost" id="logout-btn" style="color:#64748b;border-color:#2a2a3e;font-size:12px;padding:6px 10px">Sign out</button>
+    </div>
+  </header>
+
+  <!-- ── Main ── -->
+  <div class="canvas-main">
+
+    <!-- Left Tools Panel -->
+    <aside class="tools-panel">
+      <div class="tool-group-label">Tools</div>
+      <div class="tool-group">
+        <button class="tool-btn active" data-tool="select"       title="Select  V">&#9654;</button>
+        <button class="tool-btn"        data-tool="rect"         title="Rect    R">&#9645;</button>
+        <button class="tool-btn"        data-tool="circle"       title="Circle  C">&#9711;</button>
+        <button class="tool-btn"        data-tool="diamond"      title="Diamond D">&#9671;</button>
+        <button class="tool-btn"        data-tool="text"         title="Text    T" style="font-weight:700">T</button>
+        <button class="tool-btn"        data-tool="arrow"        title="Arrow   A">&#10230;</button>
+        <button class="tool-btn"        data-tool="rounded"      title="Rounded R">&#9645;</button>
       </div>
 
-      <div class="toolbar-center">
-        <input
-          class="doc-title-input"
-          id="doc-title"
-          type="text"
-          placeholder="Untitled Document"
-          spellcheck="false"
-          autocomplete="off"
-        />
+      <div class="tool-divider"></div>
+      <div class="tool-group-label">Flowchart</div>
+      <div class="tool-group flowchart-presets">
+        <button class="preset-btn" data-type="rounded"      title="Terminator">⬭<span>Start/End</span></button>
+        <button class="preset-btn" data-type="rect"         title="Process">▭<span>Process</span></button>
+        <button class="preset-btn" data-type="diamond"      title="Decision">◇<span>Decision</span></button>
+        <button class="preset-btn" data-type="parallelogram"title="Data I/O">⬡<span>Data</span></button>
+        <button class="preset-btn" data-type="cylinder"     title="Database">🗄<span>Database</span></button>
+        <button class="preset-btn" data-type="arrow"        title="Connector">→<span>Arrow</span></button>
       </div>
 
-      <div class="toolbar-right">
-        <!-- Active users avatars -->
-        <div class="users-bar" id="users-bar"></div>
-
-        <!-- Save status -->
-        <span class="save-status" id="save-status"></span>
-
-        <!-- Share button -->
-        <button class="share-btn" id="share-btn">
-          🔗 Share
-        </button>
-
-        <!-- Connection indicator -->
-        <div class="status-indicator">
-          <span class="status-dot" id="status-dot"></span>
-          <span id="status-label" style="white-space:nowrap;">Connecting…</span>
-        </div>
-
-        <button class="btn btn-ghost" id="logout-btn"
-          style="color:#64748b; border-color:#2a2a3e; font-size:12px; padding:6px 10px;">
-          Sign out
-        </button>
+      <div class="tool-divider"></div>
+      <div class="tool-group-label">Shapes</div>
+      <div class="tool-group flowchart-presets">
+        <button class="preset-btn" data-type="rect"    data-fill="#fef9c3" data-stroke="#ca8a04" title="Note">📋<span>Note</span></button>
+        <button class="preset-btn" data-type="circle"  data-fill="#dcfce7" data-stroke="#16a34a" title="Circle">○<span>Circle</span></button>
+        <button class="preset-btn" data-type="rect"    data-fill="#fee2e2" data-stroke="#dc2626" data-rx="8" title="Alert">⚠<span>Alert</span></button>
+        <button class="preset-btn" data-type="text"    title="Label">Aa<span>Label</span></button>
       </div>
-    </header>
+    </aside>
 
-    <!-- Editor Body -->
-    <div class="editor-body">
-      <div class="editor-paper">
-        <div class="editor-container">
-          <textarea
-            id="editor-textarea"
-            spellcheck="true"
-            placeholder="Start typing… your changes sync instantly with everyone in this document."
-          ></textarea>
-          <canvas id="cursor-canvas"></canvas>
-        </div>
-      </div>
+    <!-- Canvas -->
+    <div class="canvas-container" id="canvas-container">
+      <svg id="canvas-svg" xmlns="http://www.w3.org/2000/svg" tabindex="0">
+        <defs>
+          <marker id="arrowhead" markerWidth="10" markerHeight="7"
+                  refX="9" refY="3.5" orient="auto" markerUnits="strokeWidth">
+            <polygon points="0 0,10 3.5,0 7" fill="#475569"/>
+          </marker>
+          <marker id="arrowhead-blue" markerWidth="10" markerHeight="7"
+                  refX="9" refY="3.5" orient="auto" markerUnits="strokeWidth">
+            <polygon points="0 0,10 3.5,0 7" fill="#2563eb"/>
+          </marker>
+          <pattern id="grid-dots" width="20" height="20" patternUnits="userSpaceOnUse">
+            <circle cx="0" cy="0" r="0.8" fill="#cbd5e1"/>
+          </pattern>
+        </defs>
+        <!-- viewport group — zoom/pan applied here -->
+        <g id="viewport">
+          <rect id="canvas-bg" x="-2000" y="-2000" width="8000" height="8000" fill="white"/>
+          <rect id="grid-bg"   x="-2000" y="-2000" width="8000" height="8000" fill="url(#grid-dots)" opacity="0.7"/>
+          <g id="shapes-layer"></g>
+          <g id="drawing-layer"></g>
+          <g id="selection-layer"></g>
+          <g id="remote-cursors"></g>
+        </g>
+      </svg>
+
+      <!-- Text editor overlay (positioned absolutely when editing) -->
+      <textarea id="text-overlay" class="text-overlay" style="display:none"></textarea>
     </div>
 
-    <!-- Status bar -->
-    <footer class="editor-statusbar">
-      <span class="statusbar-item" id="word-count">0 words</span>
-      <span class="statusbar-item" id="rev-count">Rev 0</span>
-    </footer>
+    <!-- Right Properties Panel -->
+    <aside class="props-panel" id="props-panel">
+      <div class="props-title">Properties</div>
 
+      <div class="props-section" id="fill-section">
+        <div class="props-label">Fill</div>
+        <div class="color-swatches" id="fill-swatches"></div>
+        <div class="color-row">
+          <input type="color" id="fill-custom" class="color-picker" value="#dbeafe" title="Custom fill"/>
+          <button class="btn-swatch no-fill" id="fill-none" title="No fill">⊘</button>
+        </div>
+      </div>
+
+      <div class="props-section">
+        <div class="props-label">Stroke</div>
+        <div class="color-swatches" id="stroke-swatches"></div>
+        <div class="color-row">
+          <input type="color" id="stroke-custom" class="color-picker" value="#2563eb" title="Custom stroke"/>
+          <button class="btn-swatch no-fill" id="stroke-none" title="No stroke">⊘</button>
+        </div>
+      </div>
+
+      <div class="props-section">
+        <div class="props-label">Stroke width <span id="sw-val">2</span>px</div>
+        <input type="range" id="stroke-width" min="1" max="10" value="2" class="props-range"/>
+      </div>
+
+      <div class="props-section" id="text-props">
+        <div class="props-label">Font size <span id="fs-val">14</span>px</div>
+        <input type="range" id="font-size" min="10" max="48" value="14" class="props-range"/>
+        <div class="props-label" style="margin-top:8px">Font color</div>
+        <input type="color" id="font-color" class="color-picker" value="#1a1a2e"/>
+      </div>
+
+      <div class="props-section">
+        <div class="props-label">Opacity <span id="op-val">100</span>%</div>
+        <input type="range" id="opacity" min="10" max="100" value="100" class="props-range"/>
+      </div>
+
+      <div class="props-section">
+        <button class="btn btn-danger" id="delete-btn" style="width:100%;margin-top:4px">
+          🗑 Delete Shape
+        </button>
+        <button class="btn btn-secondary" id="duplicate-btn" style="width:100%;margin-top:8px">
+          ⧉ Duplicate
+        </button>
+      </div>
+
+      <div class="props-empty" id="props-empty">
+        <p>Select a shape<br/>to edit properties</p>
+      </div>
+    </aside>
   </div>
 
-  <!-- Share modal -->
-  <div class="modal-overlay" id="share-modal">
-    <div class="modal">
-      <h2>Share Document</h2>
-      <p class="modal-desc">Anyone with this link can join and edit the document after signing in.</p>
-      <div class="share-link-row">
-        <input type="text" id="share-link-input" readonly/>
-        <button class="btn btn-primary" id="copy-link-btn" style="width:auto; padding:10px 16px; white-space:nowrap;">Copy</button>
-      </div>
-      <p class="modal-note">
-        🔒 Collaborators need a CollabDocs account. If they don't have one, they can create it for free on the sign-in page.
-      </p>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" id="close-modal">Done</button>
-      </div>
+  <!-- Status bar -->
+  <footer class="editor-statusbar">
+    <span class="statusbar-item" id="shape-count">0 shapes</span>
+    <span class="statusbar-item" id="zoom-label">100%</span>
+    <button class="btn-icon" id="zoom-out" title="Zoom out">−</button>
+    <button class="btn-icon" id="zoom-in"  title="Zoom in">+</button>
+    <button class="btn-icon" id="fit-btn"  title="Fit to screen">⊞</button>
+    <button class="btn-icon" id="grid-toggle" title="Toggle grid">⊹</button>
+  </footer>
+
+</div>
+
+<!-- Share modal (reused from old editor) -->
+<div class="modal-overlay" id="share-modal">
+  <div class="modal">
+    <h2>Share Canvas</h2>
+    <p class="modal-desc">Anyone with this link can join and edit after signing in.</p>
+    <div class="share-link-row">
+      <input type="text" id="share-link-input" readonly/>
+      <button class="btn btn-primary" id="copy-link-btn" style="width:auto;padding:10px 16px;white-space:nowrap">Copy</button>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" id="close-modal">Done</button>
     </div>
   </div>
+</div>
 
-  <div class="toast" id="toast"></div>
+<div class="toast" id="toast"></div>
 
-  <script type="module" src="/static/js/editor.js"></script>
+<script type="module" src="/static/js/editor.js"></script>
 </body>
 </html>
