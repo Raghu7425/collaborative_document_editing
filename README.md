@@ -1,29 +1,120 @@
-# Collaborative Document Backend
+# CollabDocs — Real-Time Collaborative Document Editor
 
-A production-style backend for Google Docs / Notion-like real-time collaborative editing. The project focuses on distributed WebSocket synchronization, server-authoritative Operational Transformation, persistent event sourcing, snapshots, recovery, Redis Pub/Sub fanout, structured logs, and Prometheus metrics.
+A full-stack, production-style collaborative document editor — similar to Google Docs — built with Python, FastAPI, and vanilla JavaScript. Multiple remote users can connect to the same document, see each other's live cursors, and type concurrently with automatic conflict resolution via Operational Transformation.
+
+## Features
+
+- **Real-time collaborative editing** — changes from any user appear instantly for all connected users
+- **Live cursors** — each collaborator's cursor and name are rendered inline with a unique colour
+- **Shareable invite links** — document owners generate a one-click join URL; recipients get editor access after signing in
+- **Concurrent write safety** — server-authoritative OT rebases conflicting operations; no lost keystrokes
+- **Auto-reconnect** — clients reconnect and replay missed operations after a network drop
+- **Full revision history** — every operation stored; rollback to any previous revision
+- **Scalable broadcast** — Redis Pub/Sub fans out events across multiple API instances
 
 ## Stack
 
-- Python 3.11, FastAPI, SQLAlchemy async, PostgreSQL
-- WebSockets for real-time collaboration
-- Redis Pub/Sub for cross-instance socket fanout
-- Optional Kafka profile for operation-stream expansion
-- Alembic migrations, Docker Compose, Prometheus
-- JWT auth, structured JSON logging, OpenAPI at `/docs`
+| Layer | Technology |
+|-------|-----------|
+| Backend | Python 3.11, FastAPI, Uvicorn |
+| Real-time | WebSockets, Redis Pub/Sub |
+| Database | PostgreSQL 16 (async via asyncpg), SQLAlchemy 2, Alembic |
+| Auth | JWT (python-jose), bcrypt (passlib) |
+| Frontend | Vanilla HTML/CSS/JS, ES modules, Canvas API for cursors |
+| Observability | Prometheus metrics, structlog JSON logs |
+| Dev | Docker Compose, pytest, ruff, Locust |
 
-## Run
+---
+
+## Setup & Running
+
+### Option 1 — Docker Compose (recommended)
+
+**Prerequisites:** [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed and running.
 
 ```bash
+# 1. Enter the project directory
+cd collaborative_document_editing
+
+# 2. Start API, PostgreSQL, and Redis
 docker compose up --build
+
+# 3. In a second terminal, run migrations (first time only)
 docker compose exec api alembic upgrade head
+
+# 4. (Optional) Seed demo data
 docker compose exec api python scripts/seed.py
 ```
 
-API: `http://localhost:8000`
+Open **http://localhost:8000** — the login page loads immediately.
 
-Swagger: `http://localhost:8000/docs`
+---
 
-Metrics: `http://localhost:8000/metrics`
+### Option 2 — Local Python (no Docker for the app)
+
+**Prerequisites:** Python 3.11+, PostgreSQL 16, Redis 7.
+
+**1. Install dependencies**
+
+```bash
+cd collaborative_document_editing
+pip install -e ".[dev]"
+```
+
+**2. Start infrastructure**
+
+If you have PostgreSQL and Redis installed locally, start them. Or spin up only the infrastructure containers:
+
+```bash
+docker compose up postgres redis -d
+```
+
+**3. Configure environment**
+
+The `.env` file is already populated with local defaults — no changes needed for a local run:
+
+```env
+DATABASE_URL=postgresql+asyncpg://collab:collab@localhost:5432/collab
+REDIS_URL=redis://localhost:6379/0
+JWT_SECRET=replace-with-32-byte-secret
+```
+
+**4. Run database migrations**
+
+```bash
+alembic upgrade head
+```
+
+**5. Start the development server**
+
+```bash
+uvicorn internal.app:app --host 0.0.0.0 --port 8000 --reload
+```
+
+Open **http://localhost:8000**.
+
+---
+
+### Testing collaborative editing with two users
+
+1. Open **http://localhost:8000** → register as User A → create a document
+2. Inside the editor, click **🔗 Share** → copy the invite link
+3. Open the invite link in a second browser (or an incognito window) → register/login as User B
+4. Both users now share the same document — type in either window and changes appear instantly in the other, with each user's cursor shown in a distinct colour
+
+---
+
+## URL Reference
+
+| URL | Description |
+|-----|-------------|
+| `http://localhost:8000` | Login / Register |
+| `http://localhost:8000/dashboard` | Document list |
+| `http://localhost:8000/editor?doc={id}` | Document editor |
+| `http://localhost:8000/invite?token={token}` | Join via share link |
+| `http://localhost:8000/docs` | FastAPI interactive API docs (Swagger) |
+| `http://localhost:8000/metrics` | Prometheus metrics endpoint |
+| `http://localhost:9090` | Prometheus UI (Docker Compose only) |
 
 ## Architecture
 
