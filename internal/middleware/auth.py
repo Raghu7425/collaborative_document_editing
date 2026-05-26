@@ -13,12 +13,18 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 bearer = HTTPBearer()
 
 
+def _to_bcrypt_bytes(password: str) -> bytes:
+    # bcrypt hard-limits at 72 bytes; encode then slice so neither passlib
+    # nor the bcrypt C-extension ever sees a longer value
+    return password.encode("utf-8")[:72]
+
+
 def hash_password(password: str) -> str:
-    return pwd_context.hash(password)
+    return pwd_context.hash(_to_bcrypt_bytes(password))
 
 
 def verify_password(password: str, hashed: str) -> bool:
-    return pwd_context.verify(password, hashed)
+    return pwd_context.verify(_to_bcrypt_bytes(password), hashed)
 
 
 def create_access_token(user_id: UUID) -> str:
