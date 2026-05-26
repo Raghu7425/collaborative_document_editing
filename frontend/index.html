@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CollabDocs — Sign In</title>
+  <link rel="stylesheet" href="/static/css/app.css"/>
+</head>
+<body class="auth-page">
+  <div class="auth-wrapper">
+    <!-- Brand panel -->
+    <div class="auth-card" style="background: linear-gradient(135deg,#1e1e2e,#2d3561); color:white; flex: 0.85;">
+      <div class="auth-logo">CollabDocs</div>
+      <p style="color:#94a3b8; font-size:15px; line-height:1.7; margin-bottom:32px;">
+        Real-time collaborative document editing.<br/>
+        Multiple people, one document, zero conflicts.
+      </p>
+      <div style="display:flex; flex-direction:column; gap:14px;">
+        <div style="display:flex; align-items:center; gap:12px; color:#94a3b8; font-size:14px;">
+          <span style="font-size:22px;">⚡</span>
+          <span><strong style="color:white;">Live cursors</strong> — see exactly where teammates are editing</span>
+        </div>
+        <div style="display:flex; align-items:center; gap:12px; color:#94a3b8; font-size:14px;">
+          <span style="font-size:22px;">🔗</span>
+          <span><strong style="color:white;">Shareable links</strong> — invite anyone with a single URL</span>
+        </div>
+        <div style="display:flex; align-items:center; gap:12px; color:#94a3b8; font-size:14px;">
+          <span style="font-size:22px;">🔄</span>
+          <span><strong style="color:white;">Auto-sync</strong> — reconnects instantly after network drops</span>
+        </div>
+        <div style="display:flex; align-items:center; gap:12px; color:#94a3b8; font-size:14px;">
+          <span style="font-size:22px;">📜</span>
+          <span><strong style="color:white;">Full history</strong> — every revision stored, rollback anytime</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Login form -->
+    <div class="auth-card" id="login-panel">
+      <h2>Welcome back</h2>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="login-email" placeholder="you@example.com" autocomplete="email"/>
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password"/>
+      </div>
+      <p class="error-msg" id="login-error"></p>
+      <button class="btn btn-primary" id="login-btn">Sign In</button>
+      <div class="auth-divider">OR</div>
+      <button class="btn btn-secondary" id="show-register-btn" style="width:100%">Create an account</button>
+    </div>
+
+    <!-- Register form (hidden initially) -->
+    <div class="auth-card" id="register-panel" style="display:none">
+      <h2>Create account</h2>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="reg-email" placeholder="you@example.com" autocomplete="email"/>
+      </div>
+      <div class="form-group">
+        <label>Password <small style="color:var(--text-muted)">(min 8 chars)</small></label>
+        <input type="password" id="reg-password" placeholder="Choose a strong password" autocomplete="new-password"/>
+      </div>
+      <p class="error-msg" id="reg-error"></p>
+      <button class="btn btn-primary" id="register-btn">Create Account</button>
+      <div class="auth-divider">OR</div>
+      <button class="btn btn-secondary" id="show-login-btn" style="width:100%">Sign in instead</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script type="module">
+    import { saveToken, getToken } from '/static/js/auth.js';
+    import { api } from '/static/js/api.js';
+
+    // Already logged in? Go to dashboard
+    if (getToken()) window.location.href = '/dashboard';
+
+    const loginPanel    = document.getElementById('login-panel');
+    const registerPanel = document.getElementById('register-panel');
+
+    document.getElementById('show-register-btn').addEventListener('click', () => {
+      loginPanel.style.display = 'none'; registerPanel.style.display = '';
+    });
+    document.getElementById('show-login-btn').addEventListener('click', () => {
+      registerPanel.style.display = 'none'; loginPanel.style.display = '';
+    });
+
+    async function doLogin() {
+      const email    = document.getElementById('login-email').value.trim();
+      const password = document.getElementById('login-password').value;
+      const err      = document.getElementById('login-error');
+      err.textContent = '';
+      if (!email || !password) { err.textContent = 'Please fill in all fields.'; return; }
+      try {
+        const res = await api.login(email, password);
+        saveToken(res.access_token);
+        window.location.href = '/dashboard';
+      } catch (e) {
+        err.textContent = e.message || 'Login failed';
+      }
+    }
+
+    async function doRegister() {
+      const email    = document.getElementById('reg-email').value.trim();
+      const password = document.getElementById('reg-password').value;
+      const err      = document.getElementById('reg-error');
+      err.textContent = '';
+      if (!email || !password) { err.textContent = 'Please fill in all fields.'; return; }
+      if (password.length < 8)  { err.textContent = 'Password must be at least 8 characters.'; return; }
+      try {
+        const res = await api.register(email, password);
+        saveToken(res.access_token);
+        window.location.href = '/dashboard';
+      } catch (e) {
+        err.textContent = e.message || 'Registration failed';
+      }
+    }
+
+    document.getElementById('login-btn').addEventListener('click', doLogin);
+    document.getElementById('register-btn').addEventListener('click', doRegister);
+
+    // Enter key support
+    ['login-email','login-password'].forEach(id =>
+      document.getElementById(id).addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); })
+    );
+    ['reg-email','reg-password'].forEach(id =>
+      document.getElementById(id).addEventListener('keydown', e => { if (e.key === 'Enter') doRegister(); })
+    );
+  </script>
+</body>
+</html>

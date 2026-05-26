@@ -1,7 +1,10 @@
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from prometheus_client import make_asgi_app
 
 from internal.config.settings import Settings
@@ -17,6 +20,8 @@ settings = Settings()
 configure_logging(settings.log_level)
 bus = RedisBus(settings.redis_url)
 manager = CollaborationManager(bus)
+
+FRONTEND = Path(__file__).parent.parent / "frontend"
 
 
 @asynccontextmanager
@@ -51,3 +56,26 @@ app.include_router(document_router, prefix="/api/v1/documents", tags=["documents
 app.include_router(websocket_router, prefix="/ws", tags=["collaboration"])
 app.mount("/metrics", make_asgi_app())
 
+
+@app.get("/", include_in_schema=False)
+async def root():
+    return FileResponse(str(FRONTEND / "index.html"))
+
+
+@app.get("/dashboard", include_in_schema=False)
+async def dashboard_page():
+    return FileResponse(str(FRONTEND / "dashboard.html"))
+
+
+@app.get("/editor", include_in_schema=False)
+async def editor_page():
+    return FileResponse(str(FRONTEND / "editor.html"))
+
+
+@app.get("/invite", include_in_schema=False)
+async def invite_page():
+    return FileResponse(str(FRONTEND / "editor.html"))
+
+
+if FRONTEND.exists():
+    app.mount("/static", StaticFiles(directory=str(FRONTEND)), name="static")

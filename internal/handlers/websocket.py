@@ -12,6 +12,7 @@ from internal.database import SessionLocal
 from internal.metrics.collector import OPERATIONS_TOTAL, RECONNECTS_TOTAL, SOCKET_LATENCY
 from internal.middleware.auth import decode_token
 from internal.middleware.rate_limit import InMemoryRateLimiter
+from internal.repositories.users import UserRepository
 from internal.services.documents import DocumentService
 
 router = APIRouter()
@@ -31,8 +32,10 @@ async def document_socket(websocket: WebSocket, document_id: UUID, token: str = 
     async with SessionLocal() as session:
         await DocumentService(session).get(document_id, user_id)
         missed = await DocumentService(session).operations_after(document_id, user_id, last_revision)
+        user = await UserRepository(session).by_id(user_id)
+        user_email = user.email if user else str(user_id)
 
-    conn = await manager.connect(websocket, document_id, user_id)
+    conn = await manager.connect(websocket, document_id, user_id, user_email)
     if missed:
         RECONNECTS_TOTAL.inc()
         await manager.send(
@@ -48,7 +51,7 @@ async def document_socket(websocket: WebSocket, document_id: UUID, token: str = 
 
     try:
         while websocket.client_state == WebSocketState.CONNECTED:
-            raw = await websocket.receive_bytes()
+            raw = await websocket.receive_text()
             started = time.monotonic()
             if not socket_limiter.allow(conn.connection_id):
                 await manager.send(conn, {"type": "error", "code": "rate_limited"})
@@ -59,8 +62,21 @@ async def document_socket(websocket: WebSocket, document_id: UUID, token: str = 
 
             if event_type == "ping":
                 await manager.send(conn, {"type": "pong", "server_time": time.time()})
+
             elif event_type == "presence":
                 await manager.update_presence(conn, payload.get("presence", {}))
+
+            elif event_type == "title_change":
+                new_title = payload.get("title", "").strip()
+                if new_title:
+                    async with SessionLocal() as session:
+                        await DocumentService(session).rename(document_id, user_id, new_title)
+                    await manager.broadcast_distributed(
+                        document_id,
+                        {"type": "title_changed", "title": new_title, "user_id": str(user_id)},
+                        exclude_connection_id=conn.connection_id,
+                    )
+
             elif event_type == "operation":
                 op = TextOperation(
                     type=payload["operation"]["type"],
@@ -79,10 +95,11 @@ async def document_socket(websocket: WebSocket, document_id: UUID, token: str = 
                         "type": "operation_committed",
                         "revision": committed.revision,
                         "user_id": str(user_id),
+                        "user_email": user_email,
                         "operation_type": committed.operation_type,
                         "operation": committed.operation_payload,
                     },
-                    exclude_connection_id=None,
+                    exclude_connection_id=conn.connection_id,
                 )
                 await manager.send(
                     conn,

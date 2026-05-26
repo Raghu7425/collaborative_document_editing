@@ -20,6 +20,7 @@ class ClientConnection:
     user_id: uuid.UUID
     document_id: uuid.UUID
     connection_id: str
+    user_email: str = ""
     last_seen: float = field(default_factory=time.monotonic)
 
 
@@ -42,12 +43,14 @@ class CollaborationManager:
             for conn in list(room.values()):
                 await conn.websocket.close(code=1001)
 
-    async def connect(self, websocket: WebSocket, document_id: uuid.UUID, user_id: uuid.UUID) -> ClientConnection:
+    async def connect(self, websocket: WebSocket, document_id: uuid.UUID, user_id: uuid.UUID, user_email: str = "") -> ClientConnection:
         await websocket.accept()
-        conn = ClientConnection(websocket, user_id, document_id, str(uuid.uuid4()))
+        conn = ClientConnection(websocket, user_id, document_id, str(uuid.uuid4()), user_email)
         self.rooms[document_id][conn.connection_id] = conn
         self.presence[document_id][conn.connection_id] = {
             "user_id": str(user_id),
+            "email": user_email,
+            "name": user_email.split("@")[0] if user_email else str(user_id)[:8],
             "typing": False,
             "cursor": None,
         }
@@ -69,7 +72,7 @@ class CollaborationManager:
         log.info("socket.disconnected", connection_id=conn.connection_id)
 
     async def send(self, conn: ClientConnection, event: dict) -> None:
-        await conn.websocket.send_bytes(orjson.dumps(event))
+        await conn.websocket.send_text(orjson.dumps(event).decode())
 
     async def broadcast_local(self, document_id: uuid.UUID, event: dict, exclude_connection_id: str | None = None) -> None:
         stale = []
@@ -117,4 +120,3 @@ class CollaborationManager:
                 for conn in list(room.values()):
                     if now - conn.last_seen > 90:
                         await self.disconnect(conn)
-

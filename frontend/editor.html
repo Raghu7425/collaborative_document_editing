@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CollabDocs — Editor</title>
+  <link rel="stylesheet" href="/static/css/app.css"/>
+</head>
+<body>
+  <div class="editor-layout">
+
+    <!-- Toolbar -->
+    <header class="editor-toolbar">
+      <div class="toolbar-left">
+        <button class="back-btn" id="back-btn" title="Back to documents">←</button>
+      </div>
+
+      <div class="toolbar-center">
+        <input
+          class="doc-title-input"
+          id="doc-title"
+          type="text"
+          placeholder="Untitled Document"
+          spellcheck="false"
+          autocomplete="off"
+        />
+      </div>
+
+      <div class="toolbar-right">
+        <!-- Active users avatars -->
+        <div class="users-bar" id="users-bar"></div>
+
+        <!-- Save status -->
+        <span class="save-status" id="save-status"></span>
+
+        <!-- Share button -->
+        <button class="share-btn" id="share-btn">
+          🔗 Share
+        </button>
+
+        <!-- Connection indicator -->
+        <div class="status-indicator">
+          <span class="status-dot" id="status-dot"></span>
+          <span id="status-label" style="white-space:nowrap;">Connecting…</span>
+        </div>
+
+        <button class="btn btn-ghost" id="logout-btn"
+          style="color:#64748b; border-color:#2a2a3e; font-size:12px; padding:6px 10px;">
+          Sign out
+        </button>
+      </div>
+    </header>
+
+    <!-- Editor Body -->
+    <div class="editor-body">
+      <div class="editor-paper">
+        <div class="editor-container">
+          <textarea
+            id="editor-textarea"
+            spellcheck="true"
+            placeholder="Start typing… your changes sync instantly with everyone in this document."
+          ></textarea>
+          <canvas id="cursor-canvas"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Status bar -->
+    <footer class="editor-statusbar">
+      <span class="statusbar-item" id="word-count">0 words</span>
+      <span class="statusbar-item" id="rev-count">Rev 0</span>
+    </footer>
+
+  </div>
+
+  <!-- Share modal -->
+  <div class="modal-overlay" id="share-modal">
+    <div class="modal">
+      <h2>Share Document</h2>
+      <p class="modal-desc">Anyone with this link can join and edit the document after signing in.</p>
+      <div class="share-link-row">
+        <input type="text" id="share-link-input" readonly/>
+        <button class="btn btn-primary" id="copy-link-btn" style="width:auto; padding:10px 16px; white-space:nowrap;">Copy</button>
+      </div>
+      <p class="modal-note">
+        🔒 Collaborators need a CollabDocs account. If they don't have one, they can create it for free on the sign-in page.
+      </p>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="close-modal">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script type="module" src="/static/js/editor.js"></script>
+</body>
+</html>

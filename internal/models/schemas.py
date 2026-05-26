@@ -19,6 +19,11 @@ class TokenResponse(BaseModel):
     token_type: str = "bearer"
 
 
+class UserMeResponse(BaseModel):
+    id: uuid.UUID
+    email: str
+
+
 class DocumentCreate(BaseModel):
     title: str = Field(min_length=1, max_length=200)
     content: str = ""
@@ -33,12 +38,23 @@ class ShareRequest(BaseModel):
     role: Literal["viewer", "editor"] = "editor"
 
 
+class ShareLinkResponse(BaseModel):
+    url: str
+    token: str
+
+
+class InviteAcceptResponse(BaseModel):
+    document_id: uuid.UUID
+    title: str
+
+
 class DocumentResponse(BaseModel):
     id: uuid.UUID
     owner_id: uuid.UUID
     title: str
     content: str
     current_revision: int
+    share_token: str | None
     created_at: datetime
     updated_at: datetime
 
@@ -50,4 +66,3 @@ class Operation(BaseModel):
     length: int = 0
     base_revision: int
     client_operation_id: str
-

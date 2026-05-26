@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from sqlalchemy import delete, or_, select, update
+from sqlalchemy import delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from internal.models.entities import Collaborator, Document, DocumentOperation, DocumentSnapshot
@@ -46,6 +46,12 @@ class DocumentRepository:
 
     async def share(self, document_id: UUID, user_id: UUID, role: str) -> None:
         self.session.add(Collaborator(document_id=document_id, user_id=user_id, role=role))
+
+    async def by_share_token(self, token: str) -> Document | None:
+        return await self.session.scalar(select(Document).where(Document.share_token == token))
+
+    async def set_share_token(self, document_id: UUID, token: str) -> None:
+        await self.session.execute(update(Document).where(Document.id == document_id).values(share_token=token))
 
     async def operations_after(self, document_id: UUID, revision: int) -> list[DocumentOperation]:
         stmt = (

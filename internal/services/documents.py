@@ -1,3 +1,4 @@
+import uuid
 from uuid import UUID
 
 from fastapi import HTTPException, status
@@ -47,6 +48,27 @@ class DocumentService:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="only owner can share")
         await self.repo.share(document_id, user_id, role)
         await self.session.commit()
+
+    async def generate_share_link(self, document_id: UUID, user_id: UUID) -> str:
+        doc = await self.get(document_id, user_id)
+        if doc.owner_id != user_id:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="only owner can generate share link")
+        if doc.share_token:
+            return doc.share_token
+        token = uuid.uuid4().hex
+        await self.repo.set_share_token(document_id, token)
+        await self.session.commit()
+        return token
+
+    async def accept_invite(self, token: str, user_id: UUID):
+        doc = await self.repo.by_share_token(token)
+        if not doc:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="invite not found or expired")
+        existing = await self.repo.accessible(doc.id, user_id)
+        if not existing:
+            await self.repo.share(doc.id, user_id, "editor")
+            await self.session.commit()
+        return doc
 
     async def commit_operation(self, document_id: UUID, user_id: UUID, incoming: TextOperation) -> tuple[DocumentOperation, str]:
         await self.get(document_id, user_id)
@@ -113,4 +135,3 @@ class DocumentService:
         await self.repo.add_snapshot(document_id, revision, content)
         await self.session.commit()
         return locked
-

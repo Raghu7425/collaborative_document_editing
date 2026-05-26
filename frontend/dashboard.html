@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CollabDocs — My Documents</title>
+  <link rel="stylesheet" href="/static/css/app.css"/>
+</head>
+<body>
+  <div class="dash-layout">
+    <header class="dash-header">
+      <div class="dash-logo">CollabDocs</div>
+      <div class="dash-header-right">
+        <span class="user-email-badge" id="user-email">…</span>
+        <button class="btn btn-ghost" id="logout-btn" style="color:#94a3b8; border-color:#2a2a3e; font-size:13px;">Sign out</button>
+      </div>
+    </header>
+
+    <main class="dash-main">
+      <div class="dash-top">
+        <h1>My Documents</h1>
+        <button class="btn btn-primary" id="new-doc-btn" style="width:auto;">
+          + New Document
+        </button>
+      </div>
+
+      <div class="doc-grid" id="doc-grid">
+        <div class="loading-spinner"></div>
+      </div>
+
+      <div class="empty-state" id="empty-state">
+        <div class="empty-state-icon">📝</div>
+        <h2>No documents yet</h2>
+        <p>Create your first document and invite teammates to collaborate in real time.</p>
+        <button class="btn btn-primary" style="width:auto;" onclick="document.getElementById('new-doc-btn').click()">
+          Create Document
+        </button>
+      </div>
+    </main>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script type="module" src="/static/js/dashboard.js"></script>
+</body>
+</html>

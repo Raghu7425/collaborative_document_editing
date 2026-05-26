@@ -1,12 +1,19 @@
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Response, status
+from fastapi import APIRouter, Depends, Request, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from internal.database import get_session
 from internal.middleware.auth import current_user_id
 from internal.middleware.rate_limit import api_rate_limit
-from internal.models.schemas import DocumentCreate, DocumentRename, DocumentResponse, ShareRequest
+from internal.models.schemas import (
+    DocumentCreate,
+    DocumentRename,
+    DocumentResponse,
+    InviteAcceptResponse,
+    ShareLinkResponse,
+    ShareRequest,
+)
 from internal.services.documents import DocumentService
 
 router = APIRouter(dependencies=[Depends(api_rate_limit)])
@@ -20,6 +27,13 @@ async def create_document(payload: DocumentCreate, user_id: UUID = Depends(curre
 @router.get("", response_model=list[DocumentResponse])
 async def list_documents(user_id: UUID = Depends(current_user_id), session: AsyncSession = Depends(get_session)):
     return await DocumentService(session).list(user_id)
+
+
+# Invite accept must be before /{document_id} to avoid UUID parse conflict
+@router.post("/invite/{token}", response_model=InviteAcceptResponse)
+async def accept_invite(token: str, user_id: UUID = Depends(current_user_id), session: AsyncSession = Depends(get_session)):
+    doc = await DocumentService(session).accept_invite(token, user_id)
+    return InviteAcceptResponse(document_id=doc.id, title=doc.title)
 
 
 @router.get("/{document_id}", response_model=DocumentResponse)
@@ -45,6 +59,13 @@ async def share_document(document_id: UUID, payload: ShareRequest, user_id: UUID
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
+@router.post("/{document_id}/share-link", response_model=ShareLinkResponse)
+async def generate_share_link(document_id: UUID, request: Request, user_id: UUID = Depends(current_user_id), session: AsyncSession = Depends(get_session)):
+    token = await DocumentService(session).generate_share_link(document_id, user_id)
+    base_url = str(request.base_url).rstrip("/")
+    return ShareLinkResponse(url=f"{base_url}/invite?token={token}", token=token)
+
+
 @router.get("/{document_id}/operations")
 async def operations_after(document_id: UUID, after_revision: int = 0, user_id: UUID = Depends(current_user_id), session: AsyncSession = Depends(get_session)):
     ops = await DocumentService(session).operations_after(document_id, user_id, after_revision)
@@ -54,4 +75,3 @@ async def operations_after(document_id: UUID, after_revision: int = 0, user_id: 
 @router.post("/{document_id}/rollback/{revision}", response_model=DocumentResponse)
 async def rollback(document_id: UUID, revision: int, user_id: UUID = Depends(current_user_id), session: AsyncSession = Depends(get_session)):
     return await DocumentService(session).rollback_to_revision(document_id, user_id, revision)
-
