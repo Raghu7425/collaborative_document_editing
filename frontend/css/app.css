@@ -408,6 +408,15 @@ a { color: var(--accent); text-decoration: none; }
   max-height: calc(100vh - 80px);
 }
 .tools-panel.open { display: flex; }
+.tools-panel-body {
+  overflow-y: auto;
+  flex: 1 1 auto;
+  scrollbar-width: thin;
+  scrollbar-color: #2d2d42 transparent;
+}
+.tools-panel-body::-webkit-scrollbar { width: 4px; }
+.tools-panel-body::-webkit-scrollbar-track { background: transparent; }
+.tools-panel-body::-webkit-scrollbar-thumb { background: #2d2d42; border-radius: 2px; }
 
 .tools-panel-header {
   display: flex;
