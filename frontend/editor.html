@@ -13,6 +13,9 @@
   <header class="editor-toolbar">
     <div class="toolbar-left">
       <button class="back-btn" id="back-btn" title="Back">←</button>
+      <button class="tools-toggle-btn" id="tools-toggle-btn" title="Open toolbox">
+        <span>⚙</span> Tools
+      </button>
     </div>
     <div class="toolbar-center">
       <input class="doc-title-input" id="doc-title" type="text" placeholder="Untitled" spellcheck="false" autocomplete="off"/>
@@ -32,37 +35,80 @@
   <!-- ── Main ── -->
   <div class="canvas-main">
 
-    <!-- Left Tools Panel -->
-    <aside class="tools-panel">
-      <div class="tool-group-label">Tools</div>
-      <div class="tool-group">
-        <button class="tool-btn active" data-tool="select"       title="Select  V">&#9654;</button>
-        <button class="tool-btn"        data-tool="rect"         title="Rect    R">&#9645;</button>
-        <button class="tool-btn"        data-tool="circle"       title="Circle  C">&#9711;</button>
-        <button class="tool-btn"        data-tool="diamond"      title="Diamond D">&#9671;</button>
-        <button class="tool-btn"        data-tool="text"         title="Text    T" style="font-weight:700">T</button>
-        <button class="tool-btn"        data-tool="arrow"        title="Arrow   A">&#10230;</button>
-        <button class="tool-btn"        data-tool="rounded"      title="Rounded R">&#9645;</button>
+    <!-- Floating Tools Panel (toggled via toolbar button) -->
+    <aside class="tools-panel" id="tools-panel">
+      <div class="tools-panel-header">
+        <span class="tools-panel-title">Toolbox</span>
+        <button class="tools-panel-close" id="tools-panel-close" title="Close">✕</button>
       </div>
 
-      <div class="tool-divider"></div>
-      <div class="tool-group-label">Flowchart</div>
-      <div class="tool-group flowchart-presets">
-        <button class="preset-btn" data-type="rounded"      title="Terminator">⬭<span>Start/End</span></button>
-        <button class="preset-btn" data-type="rect"         title="Process">▭<span>Process</span></button>
-        <button class="preset-btn" data-type="diamond"      title="Decision">◇<span>Decision</span></button>
-        <button class="preset-btn" data-type="parallelogram"title="Data I/O">⬡<span>Data</span></button>
-        <button class="preset-btn" data-type="cylinder"     title="Database">🗄<span>Database</span></button>
-        <button class="preset-btn" data-type="arrow"        title="Connector">→<span>Arrow</span></button>
+      <div class="tool-section">
+        <div class="tool-group-label">Tools</div>
+        <div class="tool-group">
+          <button class="tool-btn active" data-tool="select"  title="Select (V)">
+            <span class="tool-icon">&#9654;</span><span class="tool-lbl">Select</span>
+          </button>
+          <button class="tool-btn" data-tool="rect"    title="Rectangle (R)">
+            <span class="tool-icon">&#9645;</span><span class="tool-lbl">Rect</span>
+          </button>
+          <button class="tool-btn" data-tool="circle"  title="Circle (C)">
+            <span class="tool-icon">&#9711;</span><span class="tool-lbl">Circle</span>
+          </button>
+          <button class="tool-btn" data-tool="diamond" title="Diamond (D)">
+            <span class="tool-icon">&#9671;</span><span class="tool-lbl">Diamond</span>
+          </button>
+          <button class="tool-btn" data-tool="text"    title="Text (T)">
+            <span class="tool-icon" style="font-weight:700;font-size:15px">T</span><span class="tool-lbl">Text</span>
+          </button>
+          <button class="tool-btn" data-tool="arrow"   title="Arrow (A)">
+            <span class="tool-icon">&#10230;</span><span class="tool-lbl">Arrow</span>
+          </button>
+          <button class="tool-btn" data-tool="rounded" title="Rounded Rect">
+            <span class="tool-icon">&#9645;</span><span class="tool-lbl">Rounded</span>
+          </button>
+        </div>
       </div>
 
-      <div class="tool-divider"></div>
-      <div class="tool-group-label">Shapes</div>
-      <div class="tool-group flowchart-presets">
-        <button class="preset-btn" data-type="rect"    data-fill="#fef9c3" data-stroke="#ca8a04" title="Note">📋<span>Note</span></button>
-        <button class="preset-btn" data-type="circle"  data-fill="#dcfce7" data-stroke="#16a34a" title="Circle">○<span>Circle</span></button>
-        <button class="preset-btn" data-type="rect"    data-fill="#fee2e2" data-stroke="#dc2626" data-rx="8" title="Alert">⚠<span>Alert</span></button>
-        <button class="preset-btn" data-type="text"    title="Label">Aa<span>Label</span></button>
+      <div class="tool-section">
+        <div class="tool-group-label">Flowchart</div>
+        <div class="tool-group flowchart-presets">
+          <button class="preset-btn" data-type="rounded"       title="Terminator">
+            <span class="preset-icon">⬭</span><span>Start / End</span>
+          </button>
+          <button class="preset-btn" data-type="rect"          title="Process">
+            <span class="preset-icon">▭</span><span>Process</span>
+          </button>
+          <button class="preset-btn" data-type="diamond"       title="Decision">
+            <span class="preset-icon">◇</span><span>Decision</span>
+          </button>
+          <button class="preset-btn" data-type="parallelogram" title="Data I/O">
+            <span class="preset-icon">⬡</span><span>Data I/O</span>
+          </button>
+          <button class="preset-btn" data-type="cylinder"      title="Database">
+            <span class="preset-icon">🗄</span><span>Database</span>
+          </button>
+          <button class="preset-btn" data-type="arrow"         title="Connector">
+            <span class="preset-icon">→</span><span>Connector</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="tool-section">
+        <div class="tool-group-label">Shapes</div>
+        <div class="tool-group flowchart-presets">
+          <button class="preset-btn" data-type="rect"   data-fill="#fef9c3" data-stroke="#ca8a04" title="Sticky Note">
+            <span class="preset-icon">📋</span><span>Note</span>
+          </button>
+          <button class="preset-btn" data-type="circle" data-fill="#dcfce7" data-stroke="#16a34a" title="Circle">
+            <span class="preset-icon">○</span><span>Circle</span>
+          </button>
+          <button class="preset-btn" data-type="rect"   data-fill="#fee2e2" data-stroke="#dc2626" data-rx="8" title="Alert">
+            <span class="preset-icon">⚠</span><span>Alert</span>
+          </button>
+          <button class="preset-btn" data-type="text"   title="Text Label">
+            <span class="preset-icon" style="font-weight:700">Aa</span><span>Label</span>
+          </button>
+        </div>
       </div>
     </aside>
 

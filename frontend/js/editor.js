@@ -805,6 +805,21 @@ document.getElementById('share-modal').addEventListener('click', e => { if (e.ta
 document.getElementById('back-btn').addEventListener('click', () => window.location.href = '/dashboard');
 document.getElementById('logout-btn').addEventListener('click', logout);
 
+// ── Tools panel toggle ─────────────────────────────────────────────────────────
+const toolsToggleBtn  = document.getElementById('tools-toggle-btn');
+const toolsPanel      = document.getElementById('tools-panel');
+const toolsPanelClose = document.getElementById('tools-panel-close');
+
+function openToolsPanel()  { toolsPanel.classList.add('open');    toolsToggleBtn.classList.add('panel-open'); }
+function closeToolsPanel() { toolsPanel.classList.remove('open'); toolsToggleBtn.classList.remove('panel-open'); }
+
+toolsToggleBtn.addEventListener('click', () => {
+  toolsPanel.classList.contains('open') ? closeToolsPanel() : openToolsPanel();
+});
+toolsPanelClose.addEventListener('click', closeToolsPanel);
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeToolsPanel(); }, { capture: false });
+
 function showToast(msg, type = 'success') {
   const t = document.getElementById('toast');
   t.textContent = msg; t.className = `toast toast-${type} show`;

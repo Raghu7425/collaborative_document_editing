@@ -372,33 +372,136 @@ a { color: var(--accent); text-decoration: none; }
 
 .canvas-main { flex: 1; display: flex; overflow: hidden; }
 
-/* Left tools panel */
+/* Tools toggle button in toolbar */
+.tools-toggle-btn {
+  background: var(--toolbar-light);
+  border: 1px solid #3a3a4e;
+  color: #94a3b8;
+  padding: 6px 13px;
+  border-radius: var(--radius);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.tools-toggle-btn:hover { background: #3a3a4e; color: white; border-color: #4a4a5e; }
+.tools-toggle-btn.panel-open { background: var(--accent); color: white; border-color: var(--accent); }
+
+/* Floating tools panel */
 .tools-panel {
-  width: 72px; background: #1a1a2e; display: flex; flex-direction: column;
-  align-items: center; padding: 10px 0; gap: 4px; overflow-y: auto;
-  border-right: 1px solid #2a2a3e; flex-shrink: 0; z-index: 10;
+  position: fixed;
+  top: 62px;
+  left: 10px;
+  width: 234px;
+  background: #1a1a2e;
+  border: 1px solid #2d2d42;
+  border-radius: 12px;
+  z-index: 200;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.45), 0 2px 8px rgba(0,0,0,0.2);
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+  max-height: calc(100vh - 80px);
 }
-.tool-group-label { font-size: 9px; color: #475569; text-transform: uppercase; letter-spacing: 0.08em; padding: 4px 0 2px; }
-.tool-group { display: flex; flex-direction: column; align-items: center; gap: 3px; width: 100%; padding: 0 6px; }
-.tool-divider { width: 40px; height: 1px; background: #2a2a3e; margin: 6px 0; }
+.tools-panel.open { display: flex; }
 
+.tools-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 11px 14px 10px;
+  border-bottom: 1px solid #2d2d42;
+  flex-shrink: 0;
+}
+.tools-panel-title {
+  font-size: 10px;
+  font-weight: 800;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+.tools-panel-close {
+  background: none;
+  border: none;
+  color: #475569;
+  cursor: pointer;
+  font-size: 13px;
+  padding: 3px 6px;
+  border-radius: 5px;
+  line-height: 1;
+  transition: background 0.1s, color 0.1s;
+}
+.tools-panel-close:hover { background: #2d2d42; color: #e2e8f0; }
+
+.tool-section {
+  padding: 10px 12px;
+  border-bottom: 1px solid #2d2d42;
+}
+.tool-section:last-child { border-bottom: none; padding-bottom: 12px; }
+
+.tool-group-label {
+  font-size: 9px;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+/* Basic tools — 4-column icon grid */
+.tool-group {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+}
 .tool-btn {
-  width: 44px; height: 36px; background: transparent; border: none; color: #94a3b8;
-  border-radius: 8px; cursor: pointer; font-size: 16px;
-  display: flex; align-items: center; justify-content: center;
-  transition: background 0.15s, color 0.15s;
+  height: 48px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: #94a3b8;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 4px 2px;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
 }
-.tool-btn:hover { background: #2a2a3e; color: white; }
-.tool-btn.active { background: var(--accent); color: white; }
+.tool-btn:hover { background: #2a2a3e; color: white; border-color: #3a3a4e; }
+.tool-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
+.tool-icon { font-size: 16px; line-height: 1; }
+.tool-lbl { font-size: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; line-height: 1; }
 
-.flowchart-presets { width: 100%; }
-.preset-btn {
-  width: 100%; padding: 5px 4px; background: transparent; border: none; color: #64748b;
-  border-radius: 6px; cursor: pointer; font-size: 12px; display: flex; align-items: center;
-  gap: 4px; transition: background 0.12s, color 0.12s;
+/* Flowchart & Shapes — full-width list */
+.flowchart-presets {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 2px;
+  grid-template-columns: unset !important;
 }
-.preset-btn:hover { background: #2a2a3e; color: #e2e8f0; }
-.preset-btn span { font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.preset-btn {
+  width: 100%;
+  padding: 8px 10px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: #64748b;
+  border-radius: 7px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: background 0.12s, color 0.12s, border-color 0.12s;
+  text-align: left;
+}
+.preset-btn:hover { background: #2a2a3e; color: #e2e8f0; border-color: #3a3a4e; }
+.preset-icon { font-size: 15px; width: 20px; text-align: center; flex-shrink: 0; }
+.preset-btn span:not(.preset-icon) { font-size: 12px; font-weight: 500; }
 
 /* Canvas container */
 .canvas-container {
