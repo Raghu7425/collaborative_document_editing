@@ -2,6 +2,10 @@
 
 A full-stack, production-style collaborative document editor — similar to Google Docs — built with Python, FastAPI, and vanilla JavaScript. Multiple remote users can connect to the same document, see each other's live cursors, and type concurrently with automatic conflict resolution via Operational Transformation.
 
+#demo
+
+![1780114122130](image/README/1780114122130.gif)
+
 ## Features
 
 - **Real-time collaborative editing** — changes from any user appear instantly for all connected users
